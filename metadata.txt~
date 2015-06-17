@@ -28,7 +28,7 @@ homepage=https://github.com/Geolicious/OSMroute
 tracker=https://github.com/Geolicious/OSMroute
 repository=https://github.com/Geolicious/OSMroute
 category=Web
-icon=logo.png
+icon=icon.png
 # experimental flag
 experimental=True
 

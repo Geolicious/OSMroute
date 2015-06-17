@@ -50,7 +50,7 @@ PY_FILES = \
 
 UI_FILES = OSMroute_dialog_base.ui
 
-EXTRAS = logo.png metadata.txt
+EXTRAS = icon.png metadata.txt
 
 COMPILED_RESOURCE_FILES = resources_rc.py
 
