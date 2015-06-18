@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>506</width>
+    <width>508</width>
     <height>373</height>
    </rect>
   </property>
@@ -35,7 +35,7 @@
      <x>9</x>
      <y>79</y>
      <width>491</width>
-     <height>253</height>
+     <height>251</height>
     </rect>
    </property>
    <layout class="QFormLayout" name="formLayout_2">
@@ -70,12 +70,18 @@
       </property>
      </widget>
     </item>
+    <item row="1" column="1">
+     <widget class="QLineEdit" name="stop"/>
+    </item>
     <item row="2" column="0">
      <widget class="QLabel" name="label">
       <property name="text">
        <string>Via</string>
       </property>
      </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLineEdit" name="via"/>
     </item>
     <item row="3" column="0">
      <widget class="QLabel" name="label_2">
@@ -184,46 +190,7 @@
      </layout>
     </item>
     <item row="0" column="1">
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QLineEdit" name="start"/>
-      </item>
-      <item>
-       <widget class="QPushButton" name="map_start">
-        <property name="text">
-         <string>map it</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="1" column="1">
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <item>
-       <widget class="QLineEdit" name="stop"/>
-      </item>
-      <item>
-       <widget class="QPushButton" name="map_stop">
-        <property name="text">
-         <string>map it</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="2" column="1">
-     <layout class="QHBoxLayout" name="horizontalLayout_5">
-      <item>
-       <widget class="QLineEdit" name="via"/>
-      </item>
-      <item>
-       <widget class="QPushButton" name="map_via">
-        <property name="text">
-         <string>map it</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLineEdit" name="start"/>
     </item>
    </layout>
   </widget>
@@ -292,6 +259,9 @@
   </widget>
  </widget>
  <tabstops>
+  <tabstop>start</tabstop>
+  <tabstop>stop</tabstop>
+  <tabstop>via</tabstop>
   <tabstop>mode</tabstop>
   <tabstop>points_path</tabstop>
   <tabstop>points_dialog</tabstop>
