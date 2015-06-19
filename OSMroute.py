@@ -33,7 +33,8 @@ import qgis.utils
 import requests
 from xml.etree import ElementTree
 import urllib2
-
+#we need qvariant to build the shapefile
+from PyQt4.QtCore import QVariant
 
 class OSMroute:
     """QGIS Plugin Implementation."""
@@ -257,11 +258,26 @@ class OSMroute:
                 print numberOfHits
             if numberOfHits != "0":
                 stop_point=xml[1][0][0][0][0][0].text
-            #url_stop = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding?FreeFormAdress=" + stop_address + "MaxResponse=20"
-            #payload = {'freeFormAddress': 'Feldtmannstr. 132B, Berlin 13088', 'Address countryCode': 'DE'}
-            #response_stop = requests.get(url_stop)
-            #xml_start = ElementTree.fromstring(response_start.content)
-            #xml_stop = ElementTree.fromstring(response_stop.content)
+                print stop_point
+            #create the route for start and destination
+            if start_point !="" and stop_point !="":
+                url="http://openls.geog.uni-heidelberg.de/testing2015/route?Start=" + start_point + "&End=" + stop_point + "&Via=&lang=de&distunit=KM&routepref=Fastest&avoidAreas=&useTMC=false&noMotorways=false&noTollways=false&instructions=false"
+                response = requests.get(url)
+                if respones.content != ""
+                    xml_route = ElementTree.fromstring(response.content)
+                    layer = QgsVectorLayer('LineString', 'route_OSM', "memory")
+                    pr = layer.dataProvider()
+                    pr.addAttributes([QgsField("attribution", QVariant.String)])
+                    layer.updateFields()
+                    fet = QgsFeature()
+                    seg=[]
+                    for i in range(0,len(xml_route[1][0][1][0])):
+                        seg.append(QgsPoint(float(str.split(xml_route[1][0][1][0][i].text)[0]),float(str.split(xml_route[1][0][1][0][i].text)[1])))
+                    fet.setGeometry(QgsGeometry.fromPolyline(seg))
+                    fet.setAttributes(["route provided by openrouteservice.org"])
+                    pr.addFeatures([fet])
+                    layer.updateExtents() #update it
+                    QgsMapLayerRegistry.instance().addMapLayer(layer)
 
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
