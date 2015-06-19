@@ -222,8 +222,8 @@ class OSMroute:
         # See if OK was pressed
         if result:
 
-            start_address = self.dlg.start.text()
-            stop_address = self.dlg.stop.text()
+            start_address = self.dlg.start.text().encode('utf-8')
+            stop_address = self.dlg.stop.text().encode('utf-8')
             #here comes the geocoding:
             url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
             text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + start_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
@@ -232,7 +232,6 @@ class OSMroute:
                 headers={'Content-Type': 'application/xml'})
             response_start=urllib2.urlopen(req).read()
             #tidy up response
-            response_start=urllib2.urlopen(req).read()
             newstr = response_start.replace("\n", "")
             response_start = newstr.replace("  ", "")
             xml = ElementTree.fromstring(response_start)
@@ -242,6 +241,22 @@ class OSMroute:
             if numberOfHits != "0":
                 start_point=xml[1][0][0][0][0][0].text
                 print start_point
+            #do the same for the destination
+            url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
+            text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + stop_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
+            req = urllib2.Request(url=url, 
+                data=text, 
+                headers={'Content-Type': 'application/xml'})
+            #tidy up response
+            response_stop=urllib2.urlopen(req).read()
+            newstr = response_stop.replace("\n", "")
+            response_stop = newstr.replace("  ", "")
+            xml = ElementTree.fromstring(response_stop)
+            for child in xml[1][0]:
+                numberOfHits = child.attrib["numberOfGeocodedAddresses"]
+                print numberOfHits
+            if numberOfHits != "0":
+                stop_point=xml[1][0][0][0][0][0].text
             #url_stop = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding?FreeFormAdress=" + stop_address + "MaxResponse=20"
             #payload = {'freeFormAddress': 'Feldtmannstr. 132B, Berlin 13088', 'Address countryCode': 'DE'}
             #response_stop = requests.get(url_stop)
@@ -250,5 +265,5 @@ class OSMroute:
 
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
-            print "routing finished between " + start_address + " and " + stop_address
+            print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ")"
             pass
