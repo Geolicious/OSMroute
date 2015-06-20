@@ -23,16 +23,14 @@
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon
 # Initialize Qt resources from file resources.py
-import resources_rc
+
 # Import the code for the dialog
 from OSMroute_dialog import OSMrouteDialog
-import os.path
 from qgis.core import * #to get access to qgis
-import qgis.utils
 #we will need these for getting the ors response and to parse it:
-import requests
+
 from xml.etree import ElementTree
-import urllib2
+import urllib2, os, requests, qgis.utils, os.path, resources_rc
 #we need qvariant to build the shapefile
 from PyQt4.QtCore import QVariant
 
@@ -199,22 +197,22 @@ class OSMroute:
         self.dlg.via.clear()
         self.dlg.mode.clear()
         #adding current layers to the dlg
-        # index = 1   
-        self.dlg.mode.setItemText(0,'fastest')
-        self.dlg.mode.setItemText(1,'shortest')
+        # index = 1  
+        self.dlg.mode.addItem('Fastest')
+        self.dlg.mode.addItem('Shortest')
 
         # self.dlg.layer_extent.setItemData(0,'None_id')
         # self.dlg.layer_extent.setItemText(0,'None - use keywords!')
-        # for i in allLayers: 
-        #     if i.type() == 0 or i.type() == 1: 
-        #         self.dlg.layer_extent.addItem(i.name())      
+        # for i in allLayers:
+        #     if i.type() == 0 or i.type() == 1:
+        #         self.dlg.layer_extent.addItem(i.name())     
         #         self.dlg.layer_extent.setItemData(index,i.id())
         #         self.dlg.layer_extent.setItemText(index,i.name())
         #         index = index +1
         # self.dlg.precision.clear()
         # self.dlg.precision.addItem('use user location (slow, accurate)')
         # self.dlg.precision.addItem('use place location (fast, inaccurate)')
-        
+       
         # self.dlg.output_file.addItem('no file of tweets needed')
         # self.dlg.output_file.addItem('file of raw tweets needed')
         # # Run the dialog event loop
@@ -225,11 +223,12 @@ class OSMroute:
 
             start_address = self.dlg.start.text().encode('utf-8')
             stop_address = self.dlg.stop.text().encode('utf-8')
+            mode = self.dlg.mode.currentText()
             #here comes the geocoding:
             url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
             text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + start_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
-            req = urllib2.Request(url=url, 
-                data=text, 
+            req = urllib2.Request(url=url,
+                data=text,
                 headers={'Content-Type': 'application/xml'})
             response_start=urllib2.urlopen(req).read()
             #tidy up response
@@ -245,8 +244,8 @@ class OSMroute:
             #do the same for the destination
             url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
             text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + stop_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
-            req = urllib2.Request(url=url, 
-                data=text, 
+            req = urllib2.Request(url=url,
+                data=text,
                 headers={'Content-Type': 'application/xml'})
             #tidy up response
             response_stop=urllib2.urlopen(req).read()
@@ -261,10 +260,59 @@ class OSMroute:
                 print stop_point
             #create the route for start and destination
             if start_point !="" and stop_point !="":
-                url="http://openls.geog.uni-heidelberg.de/testing2015/route?Start=" + start_point + "&End=" + stop_point + "&Via=&lang=de&distunit=KM&routepref=Fastest&avoidAreas=&useTMC=false&noMotorways=false&noTollways=false&instructions=false"
-                response = requests.get(url)
-                if response.content != "":
-                    xml_route = ElementTree.fromstring(response.content)
+                print mode
+                text = '''<?xml version="1.0" encoding="UTF-8" ?>
+<xls:XLS xmlns:xls="http://www.opengis.net/xls" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/RouteService.xsd" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.1" xls:lang="it">
+    <xls:RequestHeader>
+    </xls:RequestHeader>
+    <xls:Request methodName="RouteRequest" version="1.1" requestID="00" maximumResponses="15">
+        <xls:DetermineRouteRequest>
+            <xls:RoutePlan>
+                <xls:RoutePreference>Car</xls:RoutePreference>
+                <xls:ExtendedRoutePreference>
+                    <xls:WeightingMethod>'''
+                text+=mode
+                text+='''</xls:WeightingMethod>
+                </xls:ExtendedRoutePreference>
+                <xls:WayPointList>
+                    <xls:StartPoint>
+                        <xls:Position>
+                            <gml:Point xmlns:gml="http://www.opengis.net/gml">
+                                <gml:pos srsName="EPSG:4326">'''
+                text+=start_point
+                text+='''</gml:pos>
+                            </gml:Point>
+                        </xls:Position>
+                    </xls:StartPoint>
+                    <xls:EndPoint>
+                        <xls:Position>
+                            <gml:Point xmlns:gml="http://www.opengis.net/gml">
+                                <gml:pos srsName="EPSG:4326">'''
+                text+=stop_point
+                text+='''</gml:pos>
+                            </gml:Point>
+                        </xls:Position>
+                    </xls:EndPoint>
+                </xls:WayPointList>
+                <xls:AvoidList />
+            </xls:RoutePlan>
+            <xls:RouteInstructionsRequest provideGeometry="true" />
+            <xls:RouteGeometryRequest>
+            </xls:RouteGeometryRequest>
+        </xls:DetermineRouteRequest>
+    </xls:Request>
+</xls:XLS>
+'''
+                print text
+                url="http://openls.geog.uni-heidelberg.de/testing2015/routing"
+                print url
+                req = urllib2.Request(url=url, data=text, headers={'Content-Type': 'application/xml'})
+                response_route=urllib2.urlopen(req).read()
+                newstr = response_route.replace("\n", "")
+                response_route = newstr.replace("  ", "")
+                              
+                if response_route != "":
+                    xml_route = ElementTree.fromstring(response_route)
                     layer = QgsVectorLayer('LineString', 'route_OSM', "memory")
                     pr = layer.dataProvider()
                     pr.addAttributes([QgsField("attribution", QVariant.String)])
