@@ -22,6 +22,7 @@
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon
+from PyQt4 import QtCore, QtGui
 # Initialize Qt resources from file resources.py
 
 # Import the code for the dialog
@@ -65,7 +66,6 @@ class OSMroute:
 
         # Create the dialog (after translation) and keep reference
         self.dlg = OSMrouteDialog()
-
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&OSM route')
@@ -196,25 +196,19 @@ class OSMroute:
         self.dlg.stop.clear()
         self.dlg.via.clear()
         self.dlg.mode.clear()
-        #adding current layers to the dlg
-        # index = 1  
+        self.dlg.type.clear()  
         self.dlg.mode.addItem('Fastest')
         self.dlg.mode.addItem('Shortest')
+        self.dlg.type.addItem('Car')
+        self.dlg.type.addItem('Bicycle')
+        self.dlg.type.addItem('Pedestrian')
+        #we will not use heavy vehicle as it offers much mure detailed routing which is not commonly available
+        #self.dlg.type.addItem('HeavyVehicle')
+        #ATM we don't have interactivity with the map so disable those buttons:
+        self.dlg.map_start.setEnabled(False)
+        self.dlg.map_stop.setEnabled(False)
+        self.dlg.map_via.setEnabled(False)
 
-        # self.dlg.layer_extent.setItemData(0,'None_id')
-        # self.dlg.layer_extent.setItemText(0,'None - use keywords!')
-        # for i in allLayers:
-        #     if i.type() == 0 or i.type() == 1:
-        #         self.dlg.layer_extent.addItem(i.name())     
-        #         self.dlg.layer_extent.setItemData(index,i.id())
-        #         self.dlg.layer_extent.setItemText(index,i.name())
-        #         index = index +1
-        # self.dlg.precision.clear()
-        # self.dlg.precision.addItem('use user location (slow, accurate)')
-        # self.dlg.precision.addItem('use place location (fast, inaccurate)')
-       
-        # self.dlg.output_file.addItem('no file of tweets needed')
-        # self.dlg.output_file.addItem('file of raw tweets needed')
         # # Run the dialog event loop
         result = self.dlg.exec_()
 
@@ -223,7 +217,11 @@ class OSMroute:
 
             start_address = self.dlg.start.text().encode('utf-8')
             stop_address = self.dlg.stop.text().encode('utf-8')
+            via_address = self.dlg.via.text().encode('utf-8')
             mode = self.dlg.mode.currentText()
+            travel_type = self.dlg.type.currentText()
+            time = self.dlg.time.value()
+            interval = self.dlg.interval.value()
             #here comes the geocoding:
             url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
             text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + start_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
@@ -235,32 +233,83 @@ class OSMroute:
             newstr = response_start.replace("\n", "")
             response_start = newstr.replace("  ", "")
             xml = ElementTree.fromstring(response_start)
+            start_point =""
             for child in xml[1][0]:
-                numberOfHits = child.attrib["numberOfGeocodedAddresses"]
-                print numberOfHits
-            if numberOfHits != "0":
+                numberOfHits_start = child.attrib["numberOfGeocodedAddresses"]
+            if numberOfHits_start != "0":
                 start_point=xml[1][0][0][0][0][0].text
-                print start_point
+            if start_point =="":
+                QtGui.QMessageBox.about(self.dlg, "No Coordinates Found", "Check your start address!")
             #do the same for the destination
-            url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
-            text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + stop_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
-            req = urllib2.Request(url=url,
-                data=text,
-                headers={'Content-Type': 'application/xml'})
+            numberOfHits_stop = '0'
+            stop_point =""
+            if stop_address != "":
+                url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
+                text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + stop_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
+                req = urllib2.Request(url=url,
+                    data=text,
+                    headers={'Content-Type': 'application/xml'})
+                #tidy up response
+                response_stop=urllib2.urlopen(req).read()
+                newstr = response_stop.replace("\n", "")
+                response_stop = newstr.replace("  ", "")
+                xml = ElementTree.fromstring(response_stop)
+                
+                for child in xml[1][0]:
+                    numberOfHits_stop = child.attrib["numberOfGeocodedAddresses"]
+                if numberOfHits_stop != "0":
+                    stop_point=xml[1][0][0][0][0][0].text
+                if stop_point =="":
+                    QtGui.QMessageBox.about(self.dlg, "No Coordinates Found", "Check your destination address!")
+            #and for via points:
+            via_point = ""
+            numberOfHits_via = '0'
+            if via_address != "":
+                url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
+                text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + via_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
+                req = urllib2.Request(url=url,
+                    data=text,
+                    headers={'Content-Type': 'application/xml'})
             #tidy up response
-            response_stop=urllib2.urlopen(req).read()
-            newstr = response_stop.replace("\n", "")
-            response_stop = newstr.replace("  ", "")
-            xml = ElementTree.fromstring(response_stop)
-            for child in xml[1][0]:
-                numberOfHits = child.attrib["numberOfGeocodedAddresses"]
-                print numberOfHits
-            if numberOfHits != "0":
-                stop_point=xml[1][0][0][0][0][0].text
-                print stop_point
+                response_via=urllib2.urlopen(req).read()
+                newstr = response_via.replace("\n", "")
+                response_via = newstr.replace("  ", "")
+                xml = ElementTree.fromstring(response_via)
+                for child in xml[1][0]:
+                    numberOfHits_via = child.attrib["numberOfGeocodedAddresses"]
+                if numberOfHits_via != "0":
+                    via_point=xml[1][0][0][0][0][0].text
+                if via_point =="":
+                    QtGui.QMessageBox.about(self.dlg, "No Coordinates Found", "Check your via address!")
             #create the route for start and destination
             if start_point !="" and stop_point !="":
-                print mode
+                #first, let's add the start and stop point
+                layer = QgsVectorLayer('Point', 'points' , "memory")
+                pr = layer.dataProvider()
+                pr.addAttributes([QgsField("attribution", QVariant.String)])
+                pr.addAttributes([QgsField("address", QVariant.String)])
+                pr.addAttributes([QgsField("type", QVariant.String)])
+                layer.updateFields()
+                #we will do this manually at the moment:
+                pt = QgsFeature()
+                point = QgsPoint(float(str.split(start_point)[0]),float(str.split(start_point)[1]))
+                pt.setGeometry(QgsGeometry.fromPoint(point))
+                pt.setAttributes(["location provided by openrouteservice.org", start_address, "Start point"])
+                pr.addFeatures([pt])
+                pt = QgsFeature()
+                point = QgsPoint(float(str.split(stop_point)[0]),float(str.split(stop_point)[1]))
+                pt.setGeometry(QgsGeometry.fromPoint(point))
+                pt.setAttributes(["location provided by openrouteservice.org", stop_address, "Stop point"])
+                pr.addFeatures([pt])
+                if via_point != "":
+                    pt = QgsFeature()
+                    point = QgsPoint(float(str.split(via_point)[0]),float(str.split(via_point)[1]))
+                    pt.setGeometry(QgsGeometry.fromPoint(point))
+                    pt.setAttributes(["location provided by openrouteservice.org", via_address, "Via point"])
+                    pr.addFeatures([pt])
+                layer.updateExtents() #update it
+                QgsMapLayerRegistry.instance().addMapLayer(layer)
+                #now the routing:
                 text = '''<?xml version="1.0" encoding="UTF-8" ?>
 <xls:XLS xmlns:xls="http://www.opengis.net/xls" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/RouteService.xsd" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.1" xls:lang="it">
     <xls:RequestHeader>
@@ -268,7 +317,9 @@ class OSMroute:
     <xls:Request methodName="RouteRequest" version="1.1" requestID="00" maximumResponses="15">
         <xls:DetermineRouteRequest>
             <xls:RoutePlan>
-                <xls:RoutePreference>Car</xls:RoutePreference>
+                <xls:RoutePreference>'''
+                text+=travel_type
+                text+='''</xls:RoutePreference>
                 <xls:ExtendedRoutePreference>
                     <xls:WeightingMethod>'''
                 text+=mode
@@ -283,8 +334,18 @@ class OSMroute:
                 text+='''</gml:pos>
                             </gml:Point>
                         </xls:Position>
-                    </xls:StartPoint>
-                    <xls:EndPoint>
+                    </xls:StartPoint>'''
+                if via_point != "":
+                    text +='''<xls:ViaPoint>
+                        <xls:Position>
+                            <gml:Point xmlns:gml="http://www.opengis.net/gml">
+                                <gml:pos srsName="EPSG:4326">'''
+                    text+=via_point
+                    text+='''</gml:pos>
+                            </gml:Point>
+                        </xls:Position>
+                    </xls:ViaPoint>'''
+                text+='''<xls:EndPoint>
                         <xls:Position>
                             <gml:Point xmlns:gml="http://www.opengis.net/gml">
                                 <gml:pos srsName="EPSG:4326">'''
@@ -303,9 +364,7 @@ class OSMroute:
     </xls:Request>
 </xls:XLS>
 '''
-                print text
                 url="http://openls.geog.uni-heidelberg.de/testing2015/routing"
-                print url
                 req = urllib2.Request(url=url, data=text, headers={'Content-Type': 'application/xml'})
                 response_route=urllib2.urlopen(req).read()
                 newstr = response_route.replace("\n", "")
@@ -326,8 +385,78 @@ class OSMroute:
                     pr.addFeatures([fet])
                     layer.updateExtents() #update it
                     QgsMapLayerRegistry.instance().addMapLayer(layer)
+            if time > 0 and interval >0 and start_point != '':
+            #script for routing
+                interval = int(interval) / 60
 
+                url="http://openls.geog.uni-heidelberg.de/testing2015/analysis"
+                text='''<?xml version="1.0" encoding="UTF-8" ?>
+                <aas:AAS version="1.0" xmlns:aas="http://www.geoinform.fh-mainz.de/aas" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.geoinform.fh-mainz.de/aas">
+                    <aas:RequestHeader>
+                    </aas:RequestHeader>
+                    <aas:Request methodName="AccessibilityRequest" version="1.0" requestID="00">
+                        <aas:DetermineAccessibilityRequest>
+                            <aas:Accessibility>
+                                <aas:AccessibilityPreference>
+                                    <aas:Time Duration="PT0H'''
+                text+=str(time)
+                text+='''M00S" />
+                                </aas:AccessibilityPreference>
+                                <aas:AccessibilitySettings>
+                                    <aas:RoutePreference>Car</aas:RoutePreference>
+                                    <aas:Method>RecursiveGrid</aas:Method>
+                                    <aas:Interval>'''
+                text+=str(interval)
+                text+='''</aas:Interval>
+                                </aas:AccessibilitySettings>
+                                <aas:LocationPoint>
+                                    <aas:Position>
+                                        <gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:4326">
+                                            <gml:pos>'''
+                text += start_point
+                text +='''</gml:pos>
+                                        </gml:Point>
+                                    </aas:Position>
+                                </aas:LocationPoint>
+                            </aas:Accessibility>
+                            <aas:AccessibilityGeometryRequest>
+                                <aas:PolygonPreference>Detailed</aas:PolygonPreference>
+                            </aas:AccessibilityGeometryRequest>
+                        </aas:DetermineAccessibilityRequest>
+                    </aas:Request>
+                </aas:AAS>
+                '''
+                req = urllib2.Request(url=url, data=text, headers={'Content-Type': 'application/xml'})
+                response_poly=urllib2.urlopen(req).read()
+                newstr = response_poly.replace("\n", "")
+                response_poly = newstr.replace("  ", "")
+                xml_poly = ElementTree.fromstring(response_poly)
+                layer = QgsVectorLayer('Polygon', 'Accessibility', "memory")
+                pr = layer.dataProvider()
+                pr.addAttributes([QgsField("attribution", QVariant.String)])
+                pr.addAttributes([QgsField("index", QVariant.Int)])
+                layer.updateFields()
+                for poly in range(0,len(xml_poly[1][0][1])):
+                    fet = QgsFeature()
+                    seg=[]
+                    for i in range(0,len(xml_poly[1][0][1][poly][0][0])-1):
+                        #print xml_poly[1][0][1][poly][0][0][i].text
+                        seg.append(QgsPoint(float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[0]),float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[1])))
+                    fet.setGeometry(QgsGeometry.fromPolygon([seg]))
+                    fet.setAttributes(["route provided by openrouteservice.org", poly])
+                    pr.addFeatures([fet])
+                layer.updateExtents() #update it
+                QgsMapLayerRegistry.instance().addMapLayer(layer)        
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
-            print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ")"
+            if int(numberOfHits_via) >1:
+                print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ") via " + via_address + "(" + via_point + ")"
+            else: 
+                print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ")"
+            if int(numberOfHits_start) >1:
+                print "multiple locations for start location"
+            if int(numberOfHits_stop) >1:
+                print "multiple locations for stop location"
+            if int(numberOfHits_via) >1:
+                print "multiple locations for via location"
             pass

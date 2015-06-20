@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/plugins/OSMroute" >
-        <file>icon.png</file>
-    </qresource>
-</RCC>
