@@ -263,7 +263,7 @@ class OSMroute:
             if start_point !="" and stop_point !="":
                 url="http://openls.geog.uni-heidelberg.de/testing2015/route?Start=" + start_point + "&End=" + stop_point + "&Via=&lang=de&distunit=KM&routepref=Fastest&avoidAreas=&useTMC=false&noMotorways=false&noTollways=false&instructions=false"
                 response = requests.get(url)
-                if respones.content != ""
+                if response.content != "":
                     xml_route = ElementTree.fromstring(response.content)
                     layer = QgsVectorLayer('LineString', 'route_OSM', "memory")
                     pr = layer.dataProvider()
