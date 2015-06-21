@@ -22,6 +22,7 @@ Isochrone mapping is possible for a maximum of 30min travel time.
 * Import the plugin using the normal "add plugin" method described [here](http://docs.qgis.org/2.2/en/docs/user_manual/plugins/plugins.html#managing-plugins 'qgis plugins').
 
 ## Version_changes
+* 2015/06/21 v.0.3 added some attributes to routes and polygons
 * 2015/06/21 v.0.2 creation of categorized polygons for isochrone mapping
 * 2015/06/21 v.0.1.3 deleted unused import of modul
 * 2015/06/21 v.0.1.2 fixed issues with polygons

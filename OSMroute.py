@@ -31,9 +31,10 @@ from qgis.core import * #to get access to qgis
 #we will need these for getting the ors response and to parse it:
 
 from xml.etree import ElementTree
-import urllib2, os, qgis.utils, os.path, resources_rc
+import urllib2, os, qgis.utils, os.path, resources_rc, time
 #we need qvariant to build the shapefile
 from PyQt4.QtCore import QVariant
+
 
 class OSMroute:
     """QGIS Plugin Implementation."""
@@ -214,13 +215,14 @@ class OSMroute:
 
         # See if OK was pressed
         if result:
-
+            import time
+            start = time.clock()
             start_address = self.dlg.start.text().encode('utf-8')
             stop_address = self.dlg.stop.text().encode('utf-8')
             via_address = self.dlg.via.text().encode('utf-8')
             mode = self.dlg.mode.currentText()
             travel_type = self.dlg.type.currentText()
-            time = self.dlg.time.value()
+            timeall = self.dlg.time.value()
             interval = self.dlg.interval.value()
             #here comes the geocoding:
             url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding"
@@ -375,17 +377,19 @@ class OSMroute:
                     layer = QgsVectorLayer('LineString', 'route_OSM', "memory")
                     pr = layer.dataProvider()
                     pr.addAttributes([QgsField("attribution", QVariant.String)])
+                    pr.addAttributes([QgsField("distance", QVariant.Double)])
+                    pr.addAttributes([QgsField("time", QVariant.String)])
                     layer.updateFields()
                     fet = QgsFeature()
                     seg=[]
                     for i in range(0,len(xml_route[1][0][1][0])):
                         seg.append(QgsPoint(float(str.split(xml_route[1][0][1][0][i].text)[0]),float(str.split(xml_route[1][0][1][0][i].text)[1])))
                     fet.setGeometry(QgsGeometry.fromPolyline(seg))
-                    fet.setAttributes(["route provided by openrouteservice.org"])
+                    fet.setAttributes(["route provided by openrouteservice.org", float(xml_route[1][0][0][1].attrib['value']), xml_route[1][0][0][0].text])
                     pr.addFeatures([fet])
                     layer.updateExtents() #update it
                     QgsMapLayerRegistry.instance().addMapLayer(layer)
-            if time > 0 and interval >0 and start_point != '':
+            if timeall > 0 and interval >0 and start_point != '':
             #script for routing
                 interval = int(interval) * 60
 
@@ -399,7 +403,7 @@ class OSMroute:
                             <aas:Accessibility>
                                 <aas:AccessibilityPreference>
                                     <aas:Time Duration="PT0H'''
-                text+=str(time)
+                text+=str(timeall)
                 text+='''M00S" />
                                 </aas:AccessibilityPreference>
                                 <aas:AccessibilitySettings>
@@ -435,17 +439,19 @@ class OSMroute:
                 pr = layer.dataProvider()
                 pr.addAttributes([QgsField("attribution", QVariant.String)])
                 pr.addAttributes([QgsField("index", QVariant.Int)])
+                pr.addAttributes([QgsField("area", QVariant.Double)])
                 layer.updateFields()
                 for poly in reversed(range(0,len(xml_poly[1][0][1]))):
                     fet = QgsFeature()
                     seg=[]
                     for i in range(0,len(xml_poly[1][0][1][poly][0][0])):
-                        #print xml_poly[1][0][1][poly][0][0][i].text
                         seg.append(QgsPoint(float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[0]),float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[1])))
                     fet.setGeometry(QgsGeometry.fromPolygon([seg]))
-                    fet.setAttributes(["route provided by openrouteservice.org", poly])
+                    geom = fet.geometry()
+                    fet.setAttributes(["route provided by openrouteservice.org", poly, geom.area()])
                     pr.addFeatures([fet])
                 layer.updateExtents() #update it
+                features = layer.getFeatures()
                 QgsMapLayerRegistry.instance().addMapLayer(layer)   
                 #as we have the layer we need to adjust the representation to make it a categorized layer. 
                 import random
@@ -464,6 +470,7 @@ class OSMroute:
                 expression = 'index' # field name
                 renderer = QgsCategorizedSymbolRendererV2(expression, categories)
                 layer.setRendererV2(renderer)
+                layer.setLayerTransparency(50)
                 from qgis.gui import QgsMapCanvas
                 canvas = QgsMapCanvas()
                 canvas.refresh()
@@ -472,11 +479,13 @@ class OSMroute:
             if int(numberOfHits_via) >1:
                 print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ") via " + via_address + "(" + via_point + ")"
             else: 
-                print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ")"
+                print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ")" 
             if int(numberOfHits_start) >1:
                 print "multiple locations for start location"
             if int(numberOfHits_stop) >1:
                 print "multiple locations for stop location"
             if int(numberOfHits_via) >1:
                 print "multiple locations for via location"
+            end = time.clock()
+            #print "time needed to calculate: " + str(end - start) + "Distance: " + str(float(xml_route[1][0][0][1].attrib['value'])) + " from " + start_address + " to " + stop_address
             pass
