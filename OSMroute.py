@@ -31,7 +31,7 @@ from qgis.core import * #to get access to qgis
 #we will need these for getting the ors response and to parse it:
 
 from xml.etree import ElementTree
-import urllib2, os, requests, qgis.utils, os.path, resources_rc
+import urllib2, os, qgis.utils, os.path, resources_rc
 #we need qvariant to build the shapefile
 from PyQt4.QtCore import QVariant
 
@@ -387,7 +387,7 @@ class OSMroute:
                     QgsMapLayerRegistry.instance().addMapLayer(layer)
             if time > 0 and interval >0 and start_point != '':
             #script for routing
-                interval = int(interval) / 60
+                interval = int(interval) * 60
 
                 url="http://openls.geog.uni-heidelberg.de/testing2015/analysis"
                 text='''<?xml version="1.0" encoding="UTF-8" ?>
@@ -436,7 +436,7 @@ class OSMroute:
                 pr.addAttributes([QgsField("attribution", QVariant.String)])
                 pr.addAttributes([QgsField("index", QVariant.Int)])
                 layer.updateFields()
-                for poly in range(0,len(xml_poly[1][0][1])):
+                for poly in reversed(range(0,len(xml_poly[1][0][1]))):
                     fet = QgsFeature()
                     seg=[]
                     for i in range(0,len(xml_poly[1][0][1][poly][0][0])-1):

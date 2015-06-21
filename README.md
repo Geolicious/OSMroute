@@ -22,8 +22,10 @@ Isochrone mapping is possible for a maximum of 30min travel time.
 * Import the plugin using the normal "add plugin" method described [here](http://docs.qgis.org/2.2/en/docs/user_manual/plugins/plugins.html#managing-plugins 'qgis plugins').
 
 ## Version_changes
+* 2015/06/21 v.0.1.3 deleted unused import of modul
+* 2015/06/21 v.0.1.2 fixed issues with polygons
 * 2015/06/21 v.0.1.1 minor changes in description, added messagebox if geocoding fails
-* 2015/06/22 v.0.1: initial beta
+* 2015/06/21 v.0.1: initial beta
 
 ## Tests
 
