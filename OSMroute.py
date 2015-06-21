@@ -21,7 +21,7 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt4.QtGui import QAction, QIcon
+from PyQt4.QtGui import QAction, QIcon, QColor
 from PyQt4 import QtCore, QtGui
 # Initialize Qt resources from file resources.py
 
@@ -439,14 +439,34 @@ class OSMroute:
                 for poly in reversed(range(0,len(xml_poly[1][0][1]))):
                     fet = QgsFeature()
                     seg=[]
-                    for i in range(0,len(xml_poly[1][0][1][poly][0][0])-1):
+                    for i in range(0,len(xml_poly[1][0][1][poly][0][0])):
                         #print xml_poly[1][0][1][poly][0][0][i].text
                         seg.append(QgsPoint(float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[0]),float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[1])))
                     fet.setGeometry(QgsGeometry.fromPolygon([seg]))
                     fet.setAttributes(["route provided by openrouteservice.org", poly])
                     pr.addFeatures([fet])
                 layer.updateExtents() #update it
-                QgsMapLayerRegistry.instance().addMapLayer(layer)        
+                QgsMapLayerRegistry.instance().addMapLayer(layer)   
+                #as we have the layer we need to adjust the representation to make it a categorized layer. 
+                import random
+                r = lambda: random.randint(0,255)
+                color = '#%02X%02X%02X' % (r(),r(),r())
+                list = {} # empty
+                categories = []
+
+                for i in reversed(range(0,len(xml_poly[1][0][1]))):
+                    r = lambda: random.randint(0,255) #create random color
+                    list.update({str(i): ('#%02x%02x%02x' % (r(),r(),r()), str(i))})
+                    symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
+                    symbol.setColor(QColor('#%02x%02x%02x' % (r(),r(),r())))
+                    category = QgsRendererCategoryV2(str(i), symbol, str(i))
+                    categories.append(category)
+                expression = 'index' # field name
+                renderer = QgsCategorizedSymbolRendererV2(expression, categories)
+                layer.setRendererV2(renderer)
+                from qgis.gui import QgsMapCanvas
+                canvas = QgsMapCanvas()
+                canvas.refresh()
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             if int(numberOfHits_via) >1:

@@ -12,8 +12,9 @@ qgisMinimumVersion=2.0
 description=OpenRouteService routing for QGIS
 about=OSM route will allow you routing from A to B via C for different ways of travel. Furthermore you can make an accessability analysis. Powered by OpenRouteService.org
 
-version=0.1.3
+version=0.2
 author=Riccardo Klinger, Geolicious
+owner=riccardoklinger
 email=riccardo.klinger@geolicious.de
 
 # End of mandatory metadata
@@ -21,7 +22,8 @@ email=riccardo.klinger@geolicious.de
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog= 2015/06/21 v.0.1.3 deleted unused module requests
+changelog= 2015/06/21 v.0.2 creation of categorized polygons for isochrone mapping
+	2015/06/21 v.0.1.3 deleted unused module requests
 	2015/06/21 v.0.1.2 enhanced isochrone mapping with correct interval treatment
 	2015/06/21 v.0.1.1 minor changes in description, added messagebox if geocoding fails
 	2015/06/21 v.0.1 Beta Version
