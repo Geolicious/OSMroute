@@ -34,7 +34,7 @@ from xml.etree import ElementTree
 import urllib2, os, qgis.utils, os.path, resources_rc, time
 #we need qvariant to build the shapefile
 from PyQt4.QtCore import QVariant
-
+import processing
 
 class OSMroute:
     """QGIS Plugin Implementation."""
@@ -407,7 +407,9 @@ class OSMroute:
                 text+='''M00S" />
                                 </aas:AccessibilityPreference>
                                 <aas:AccessibilitySettings>
-                                    <aas:RoutePreference>Car</aas:RoutePreference>
+                                    <aas:RoutePreference>'''
+                text+=travel_type
+                text+='''</aas:RoutePreference>
                                     <aas:Method>RecursiveGrid</aas:Method>
                                     <aas:Interval>'''
                 text+=str(interval)

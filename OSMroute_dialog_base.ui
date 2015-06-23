@@ -152,7 +152,7 @@
     <item row="7" column="0">
      <widget class="QLabel" name="label_13">
       <property name="text">
-       <string>Isochrone Polyon (min)</string>
+       <string>Isochrone Polygon (min)</string>
       </property>
      </widget>
     </item>
@@ -209,7 +209,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Accessability Analysis:</string>
+       <string>accessibility Analysis:</string>
       </property>
      </widget>
     </item>
