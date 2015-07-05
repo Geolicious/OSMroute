@@ -286,7 +286,7 @@ class OSMroute:
             #create the route for start and destination
             if start_point !="" and stop_point !="":
                 #first, let's add the start and stop point
-                layer = QgsVectorLayer('Point', 'points' , "memory")
+                layer = QgsVectorLayer('Point?crs=EPSG:4326', 'points' , "memory")
                 pr = layer.dataProvider()
                 pr.addAttributes([QgsField("attribution", QVariant.String)])
                 pr.addAttributes([QgsField("address", QVariant.String)])
@@ -374,7 +374,7 @@ class OSMroute:
                               
                 if response_route != "":
                     xml_route = ElementTree.fromstring(response_route)
-                    layer = QgsVectorLayer('LineString', 'route_OSM', "memory")
+                    layer = QgsVectorLayer('LineString?crs=EPSG:4326', 'route_OSM', "memory")
                     pr = layer.dataProvider()
                     pr.addAttributes([QgsField("attribution", QVariant.String)])
                     pr.addAttributes([QgsField("distance", QVariant.Double)])
@@ -437,7 +437,10 @@ class OSMroute:
                 newstr = response_poly.replace("\n", "")
                 response_poly = newstr.replace("  ", "")
                 xml_poly = ElementTree.fromstring(response_poly)
-                layer = QgsVectorLayer('Polygon', 'Accessibility', "memory")
+                #first we need to make sure, that OTF projection is enabled
+                qgis.utils.iface.mapCanvas().mapRenderer().setProjectionsEnabled(True) # Enable on the fly reprojections
+                #come to the layer
+                layer = QgsVectorLayer('Polygon?crs=EPSG:4326', 'Accessibility', "memory")
                 pr = layer.dataProvider()
                 pr.addAttributes([QgsField("attribution", QVariant.String)])
                 pr.addAttributes([QgsField("index", QVariant.Int)])
@@ -450,11 +453,23 @@ class OSMroute:
                         seg.append(QgsPoint(float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[0]),float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[1])))
                     fet.setGeometry(QgsGeometry.fromPolygon([seg]))
                     geom = fet.geometry()
-                    fet.setAttributes(["route provided by openrouteservice.org", poly, geom.area()])
+                    fet.setAttributes(["route provided by openrouteservice.org", poly, 1])
                     pr.addFeatures([fet])
                 layer.updateExtents() #update it
                 features = layer.getFeatures()
                 QgsMapLayerRegistry.instance().addMapLayer(layer)   
+                # now add a field fo the area:
+                expression = QgsExpression("$area")
+#               This allows field lookup
+                expression.prepare(layer.pendingFields())
+
+                layer.startEditing()
+                for feature in layer.getFeatures():
+                    value = expression.evaluate(feature)
+                    feature["area"] = value
+                    layer.updateFeature(feature)
+
+                layer.commitChanges() 
                 #as we have the layer we need to adjust the representation to make it a categorized layer. 
                 import random
                 r = lambda: random.randint(0,255)

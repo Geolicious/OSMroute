@@ -1,7 +1,7 @@
 # OSMrouter
 Find routes using OpenStreetMap data. 
 
-**ATTENTION: The current API of OpenRouteService.org only supports Europe, Asia and Africa!**
+**ATTENTION: The current API of OpenRouteService.org only supports Europe, Asia, Africa and Australia!**
 
 ## Synopsis
 
@@ -15,6 +15,8 @@ The route will be created as a temporary shapefile as well.
 
 Isochrone mapping is possible for a maximum of 30min travel time.
 
+All files need to be saved seperately when needed for further analysis.
+
 ## Installation
 
 * Download the source and place it in the '/.qgis2/python/plugins/OSMroute' folder  
@@ -22,7 +24,8 @@ Isochrone mapping is possible for a maximum of 30min travel time.
 * Import the plugin using the normal "add plugin" method described [here](http://docs.qgis.org/2.2/en/docs/user_manual/plugins/plugins.html#managing-plugins 'qgis plugins').
 
 ## Version_changes
-* 2015/06/21 v.0.3.1 respecting travel type bike and ped on access analysis
+* 2015/07/05 v.0.3.2 set EPSG 4326 as default for new vector layers.
+* 2015/06/23 v.0.3.1 respecting travel type bike and ped on access analysis and corrected labels in GUI
 * 2015/06/21 v.0.3 added some attributes to routes and polygons
 * 2015/06/21 v.0.2 creation of categorized polygons for isochrone mapping
 * 2015/06/21 v.0.1.3 deleted unused import of modul
