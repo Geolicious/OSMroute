@@ -443,33 +443,35 @@ class OSMroute:
                 layer = QgsVectorLayer('Polygon?crs=EPSG:4326', 'Accessibility', "memory")
                 pr = layer.dataProvider()
                 pr.addAttributes([QgsField("attribution", QVariant.String)])
-                pr.addAttributes([QgsField("index", QVariant.Int)])
+                pr.addAttributes([QgsField("time", QVariant.Int)])
                 pr.addAttributes([QgsField("area", QVariant.Double)])
                 layer.updateFields()
                 for poly in reversed(range(0,len(xml_poly[1][0][1]))):
                     fet = QgsFeature()
                     seg=[]
-                    for i in range(0,len(xml_poly[1][0][1][poly][0][0])):
-                        seg.append(QgsPoint(float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[0]),float(str.split(xml_poly[1][0][1][poly][0][0][i].text)[1])))
+                    for i in range(0,len(xml_poly[1][0][1][poly][0][0][0][0])):
+                        #print response_poly 
+                        #print float(xml_poly[1][0][1][poly][0].attrib['area'])
+                        seg.append(QgsPoint(float(str.split(xml_poly[1][0][1][poly][0][0][0][0][i].text)[0]),float(str.split(xml_poly[1][0][1][poly][0][0][0][0][i].text)[1])))
                     fet.setGeometry(QgsGeometry.fromPolygon([seg]))
                     geom = fet.geometry()
-                    fet.setAttributes(["route provided by openrouteservice.org", poly, 1])
+                    fet.setAttributes(["route provided by openrouteservice.org", float(xml_poly[1][0][1][poly].attrib['time'])/60, float(xml_poly[1][0][1][poly][0].attrib['area'])])
                     pr.addFeatures([fet])
                 layer.updateExtents() #update it
                 features = layer.getFeatures()
                 QgsMapLayerRegistry.instance().addMapLayer(layer)   
                 # now add a field fo the area:
-                expression = QgsExpression("$area")
+                #expression = QgsExpression("$area")
 #               This allows field lookup
-                expression.prepare(layer.pendingFields())
+                #expression.prepare(layer.pendingFields())
 
-                layer.startEditing()
-                for feature in layer.getFeatures():
-                    value = expression.evaluate(feature)
-                    feature["area"] = value
-                    layer.updateFeature(feature)
+                #layer.startEditing()
+                #for feature in layer.getFeatures():
+                   #value = expression.evaluate(feature)
+                    #feature["area"] = value
+                    #layer.updateFeature(feature)
 
-                layer.commitChanges() 
+                #layer.commitChanges() 
                 #as we have the layer we need to adjust the representation to make it a categorized layer. 
                 import random
                 r = lambda: random.randint(0,255)
@@ -479,12 +481,12 @@ class OSMroute:
 
                 for i in reversed(range(0,len(xml_poly[1][0][1]))):
                     r = lambda: random.randint(0,255) #create random color
-                    list.update({str(i): ('#%02x%02x%02x' % (r(),r(),r()), str(i))})
+                    list.update({str(int(float(xml_poly[1][0][1][i].attrib['time'])/60)): ('#%02x%02x%02x' % (r(),r(),r()), str(int(float(xml_poly[1][0][1][i].attrib['time'])/60)))})
                     symbol = QgsSymbolV2.defaultSymbol(layer.geometryType())
                     symbol.setColor(QColor('#%02x%02x%02x' % (r(),r(),r())))
-                    category = QgsRendererCategoryV2(str(i), symbol, str(i))
+                    category = QgsRendererCategoryV2(str(int(float(xml_poly[1][0][1][i].attrib['time'])/60)), symbol, str(int(float(xml_poly[1][0][1][i].attrib['time'])/60)))
                     categories.append(category)
-                expression = 'index' # field name
+                expression = 'time' # field name
                 renderer = QgsCategorizedSymbolRendererV2(expression, categories)
                 layer.setRendererV2(renderer)
                 layer.setLayerTransparency(50)
