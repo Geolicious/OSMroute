@@ -24,6 +24,7 @@ All files need to be saved seperately when needed for further analysis.
 * Import the plugin using the normal "add plugin" method described [here](http://docs.qgis.org/2.2/en/docs/user_manual/plugins/plugins.html#managing-plugins 'qgis plugins').
 
 ## Version_changes
+* 2015/07/16 v.0.4.1 added API key as desired by openrouteservice.org
 * 2015/07/14 v.0.4 correct area for accessibility analysis and correct time attribute to differentiate polygons
 * 2015/07/05 v.0.3.2 set EPSG 4326 as default for new vector layers.
 * 2015/06/23 v.0.3.1 respecting travel type bike and ped on access analysis and corrected labels in GUI
