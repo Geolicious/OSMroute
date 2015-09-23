@@ -196,13 +196,16 @@ class OSMroute:
         self.dlg.start.clear()
         self.dlg.stop.clear()
         self.dlg.via.clear()
-        self.dlg.mode.clear()
+        self.dlg.mode.clear
+        self.dlg.mode_access.clear()
         self.dlg.type.clear()  
         self.dlg.mode.addItem('Fastest')
         self.dlg.mode.addItem('Shortest')
         self.dlg.type.addItem('Car')
         self.dlg.type.addItem('Bicycle')
         self.dlg.type.addItem('Pedestrian')
+        self.dlg.mode_access.addItem('RecursiveGrid')
+        self.dlg.mode_access.addItem('TIN')
         #we will not use heavy vehicle as it offers much mure detailed routing which is not commonly available
         #self.dlg.type.addItem('HeavyVehicle')
         #ATM we don't have interactivity with the map so disable those buttons:
@@ -224,6 +227,7 @@ class OSMroute:
             travel_type = self.dlg.type.currentText()
             timeall = self.dlg.time.value()
             interval = self.dlg.interval.value()
+            access_mode = self.dlg.mode_access.currentText()
             #here comes the geocoding:
             url = "http://openls.geog.uni-heidelberg.de/testing2015/geocoding?apikey=e2017639f5e987e6dc1f5f69a66d049c"
             text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + start_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
@@ -392,7 +396,6 @@ class OSMroute:
             if timeall > 0 and interval >0 and start_point != '':
             #script for routing
                 interval = int(interval) * 60
-
                 url="http://openls.geog.uni-heidelberg.de/testing2015/analysis?apikey=e2017639f5e987e6dc1f5f69a66d049c"
                 text='''<?xml version="1.0" encoding="UTF-8" ?>
                 <aas:AAS version="1.0" xmlns:aas="http://www.geoinform.fh-mainz.de/aas" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.geoinform.fh-mainz.de/aas">
@@ -410,7 +413,9 @@ class OSMroute:
                                     <aas:RoutePreference>'''
                 text+=travel_type
                 text+='''</aas:RoutePreference>
-                                    <aas:Method>RecursiveGrid</aas:Method>
+                                    <aas:Method>'''
+                text+=access_mode
+                text+='''</aas:Method>
                                     <aas:Interval>'''
                 text+=str(interval)
                 text+='''</aas:Interval>
