@@ -12,7 +12,7 @@ qgisMinimumVersion=2.0
 description=OpenRouteService routing for QGIS
 about=OSM route will allow you routing from A to B via C for different ways of travel. Furthermore you can make an accessability analysis. Powered by OpenRouteService.org
 
-version=0.5
+version=0.6
 author=Riccardo Klinger, Geolicious
 owners=riccardoklinger
 email=riccardo.klinger@geolicious.de
@@ -22,7 +22,8 @@ email=riccardo.klinger@geolicious.de
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog= 2015/09/22 v.0.5 added new accessibility routing mode
+changelog= 2016/08/25 v.0.6 changed API address, new design (Thanks @underdarkgis)
+	2015/09/22 v.0.5 added new accessibility routing mode
 	2015/07/16 v.0.4.1 added API key as desired by openrouteservice.org
 	2015/07/14 v.0.4 correct area for accessibility analysis and correct time attribute to differentiate polygons
 	2015/07/05 v.0.3.2 set EPSG 4326 as default for new vector layers.
