@@ -1,7 +1,8 @@
+
 # OSMrouter
 Find routes using OpenStreetMap data. 
 
-**ATTENTION: The current API of OpenRouteService.org only supports Europe, Asia, Africa and Australia!**
+**ATTENTION: The current API of OpenRouteService.org was reworked. THIS plugin isn't working anymore. Please use [OSM tools](https://plugins.qgis.org/plugins/OSMtools/)**
 
 ## Synopsis
 
