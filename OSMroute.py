@@ -198,7 +198,7 @@ class OSMroute:
         self.dlg.via.clear()
         self.dlg.mode.clear
         self.dlg.mode_access.clear()
-        self.dlg.type.clear()  
+        self.dlg.type.clear()
         self.dlg.mode.addItem('Fastest')
         self.dlg.mode.addItem('Shortest')
         self.dlg.type.addItem('Car')
@@ -228,12 +228,13 @@ class OSMroute:
             timeall = self.dlg.time.value()
             interval = self.dlg.interval.value()
             access_mode = self.dlg.mode_access.currentText()
-            #here comes the geocoding:
-            text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + start_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
-            req = urllib2.Request(url=url,
-                data=text,
-                headers={'Content-Type': 'application/xml'})
-            response_start=urllib2.urlopen(req).read()
+			#The api changed
+			#here comes the geocoding:
+            # text='<?xml version="1.0" encoding="UTF-8"?><xls:XLS xmlns:xls="http://www.opengis.net/xls" xmlns:sch="http://www.ascc.net/xml/schematron" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/xls http://schemas.opengis.net/ols/1.1.0/LocationUtilityService.xsd" version="1.1"><xls:RequestHeader/><xls:Request methodName="GeocodeRequest" requestID="123456789" version="1.1"><xls:GeocodeRequest><xls:Address countryCode="DE"><xls:freeFormAddress>' + start_address + '</xls:freeFormAddress></xls:Address></xls:GeocodeRequest></xls:Request></xls:XLS>'
+            # req = urllib2.Request(url=url,
+            #     data=text,
+            #     headers={'Content-Type': 'application/xml'})
+            # response_start=urllib2.urlopen(req).read()
             #tidy up response
             newstr = response_start.replace("\n", "")
             response_start = newstr.replace("  ", "")
@@ -258,7 +259,7 @@ class OSMroute:
                 newstr = response_stop.replace("\n", "")
                 response_stop = newstr.replace("  ", "")
                 xml = ElementTree.fromstring(response_stop)
-                
+
                 for child in xml[1][0]:
                     numberOfHits_stop = child.attrib["numberOfGeocodedAddresses"]
                 if numberOfHits_stop != "0":
@@ -371,7 +372,7 @@ class OSMroute:
                 response_route=urllib2.urlopen(req).read()
                 newstr = response_route.replace("\n", "")
                 response_route = newstr.replace("  ", "")
-                              
+
                 if response_route != "":
                     xml_route = ElementTree.fromstring(response_route)
                     layer = QgsVectorLayer('LineString?crs=EPSG:4326', 'route_OSM', "memory")
@@ -450,7 +451,7 @@ class OSMroute:
                     fet = QgsFeature()
                     seg=[]
                     for i in range(0,len(xml_poly[1][0][1][poly][0][0][0][0])):
-                        #print response_poly 
+                        #print response_poly
                         #print float(xml_poly[1][0][1][poly][0].attrib['area'])
                         seg.append(QgsPoint(float(str.split(xml_poly[1][0][1][poly][0][0][0][0][i].text)[0]),float(str.split(xml_poly[1][0][1][poly][0][0][0][0][i].text)[1])))
                     fet.setGeometry(QgsGeometry.fromPolygon([seg]))
@@ -459,7 +460,7 @@ class OSMroute:
                     pr.addFeatures([fet])
                 layer.updateExtents() #update it
                 features = layer.getFeatures()
-                QgsMapLayerRegistry.instance().addMapLayer(layer)   
+                QgsMapLayerRegistry.instance().addMapLayer(layer)
                 # now add a field fo the area:
                 #expression = QgsExpression("$area")
 #               This allows field lookup
@@ -471,8 +472,8 @@ class OSMroute:
                     #feature["area"] = value
                     #layer.updateFeature(feature)
 
-                #layer.commitChanges() 
-                #as we have the layer we need to adjust the representation to make it a categorized layer. 
+                #layer.commitChanges()
+                #as we have the layer we need to adjust the representation to make it a categorized layer.
                 import random
                 r = lambda: random.randint(0,255)
                 color = '#%02X%02X%02X' % (r(),r(),r())
@@ -497,8 +498,8 @@ class OSMroute:
             # substitute with your code.
             if int(numberOfHits_via) >1:
                 print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ") via " + via_address + "(" + via_point + ")"
-            else: 
-                print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ")" 
+            else:
+                print "routing finished between " + start_address + "(" + start_point + ") and " + stop_address + "(" + stop_point + ")"
             if int(numberOfHits_start) >1:
                 print "multiple locations for start location"
             if int(numberOfHits_stop) >1:
